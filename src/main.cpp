@@ -1,5 +1,6 @@
+#include <QApplication>
+
 #include "MainWindow.h"
-#include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
 {
@@ -8,3 +9,5 @@ int main(int argc, char *argv[])
     w.show();
     return a.exec();
 }
+
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
