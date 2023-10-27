@@ -13,6 +13,8 @@ TcpServerWidget::TcpServerWidget( SocketConfig * config, QWidget * parent )
 {
 	ui.setupUi( this );
 
+	SocketConfig conf = *config;
+
 	QList<QHostAddress> ips = QNetworkInterface::allAddresses();
 	std::sort( ips.begin(), ips.end(), [](const auto & left, const auto & right ) { return left.toString() < right.toString(); } );
 	for( auto it : ips )
@@ -22,11 +24,11 @@ TcpServerWidget::TcpServerWidget( SocketConfig * config, QWidget * parent )
 	}
 	ui.lineEdit_port->setValidator( new QIntValidator( 1, 65535 ) );
 
-	ui.lineEdit_name->setText( config->name );
-	ui.comboBox_ip->setCurrentText( config->host );
-	ui.lineEdit_port->setText( QString::number( config->port ) );
-	ui.checkBox_auto_disconnect->setChecked( config->auto_disconnect );
-	ui.lineEdit_disconnect_interval->setText( QString::number( config->interval ) );
+	ui.lineEdit_name->setText( conf.name );
+	ui.comboBox_ip->setCurrentText( conf.host );
+	ui.lineEdit_port->setText( QString::number( conf.port ) );
+	ui.checkBox_auto_disconnect->setChecked( conf.auto_disconnect );
+	ui.lineEdit_disconnect_interval->setText( QString::number( conf.interval ) );
 }
 
 TcpServerWidget::~TcpServerWidget()

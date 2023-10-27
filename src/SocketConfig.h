@@ -8,6 +8,7 @@ class SocketConfig : public QObject
 
 public:
 	SocketConfig( QObject * parent );
+	SocketConfig( const SocketConfig & other );
 	~SocketConfig();
 
 public:

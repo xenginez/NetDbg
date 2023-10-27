@@ -10,6 +10,7 @@
 UdpSession::UdpSession( QUdpSocket * socket, const QHostAddress & addr, quint16 port, QObject * parent )
 	: QObject( parent ), _socket( socket ), _addr( addr ), _port( port )
 {
+
 }
 
 quint16 UdpSession::peerPort() const
@@ -37,6 +38,8 @@ UdpServerWidget::UdpServerWidget( SocketConfig * config, QWidget * parent )
 {
 	ui.setupUi( this );
 
+	SocketConfig conf = *config;
+
 	QList<QHostAddress> ips = QNetworkInterface::allAddresses();
 	std::sort( ips.begin(), ips.end(), [](const auto & left, const auto & right ) { return left.toString() < right.toString(); } );
 	for( auto it : ips )
@@ -46,11 +49,11 @@ UdpServerWidget::UdpServerWidget( SocketConfig * config, QWidget * parent )
 	}
 	ui.lineEdit_port->setValidator( new QIntValidator( 1, 65535 ) );
 
-	ui.lineEdit_name->setText( config->name );
-	ui.comboBox_ip->setCurrentText( config->host );
-	ui.lineEdit_port->setText( QString::number( config->port ) );
-	ui.checkBox_auto_disconnect->setChecked( config->auto_disconnect );
-	ui.lineEdit_disconnect_interval->setText( QString::number( config->interval ) );
+	ui.lineEdit_name->setText( conf.name );
+	ui.comboBox_ip->setCurrentText( conf.host );
+	ui.lineEdit_port->setText( QString::number( conf.port ) );
+	ui.checkBox_auto_disconnect->setChecked( conf.auto_disconnect );
+	ui.lineEdit_disconnect_interval->setText( QString::number( conf.interval ) );
 }
 
 UdpServerWidget::~UdpServerWidget()
@@ -147,28 +150,26 @@ void UdpServerWidget::on_pushButton_listener_clicked()
 							delete ui.listWidget_clients->takeItem( ui.listWidget_clients->row( item ) );
 						} );
 					}
-					else
+
+					auto data = QByteArray::fromRawData( buf, len );
+					auto buffer = socket->property( "buffer" ).toByteArray();
+					if( !buffer.isEmpty() ) buffer.append( '\n' );
+
+					buffer.append( data );
+					socket->setProperty( "buffer", buffer );
+
+					auto item = ui.listWidget_clients->currentItem();
+					if( item != nullptr && item->data( Qt::UserRole + 1 ).value<UdpSession *>() == socket )
 					{
-						auto data = QByteArray::fromRawData( buf, len );
-						auto buffer = socket->property( "buffer" ).toByteArray();
-						if( !buffer.isEmpty() ) buffer.append( '\n' );
-
-						buffer.append( data );
-						socket->setProperty( "buffer", buffer );
-
-						auto item = ui.listWidget_clients->currentItem();
-						if( item != nullptr && item->data( Qt::UserRole + 1 ).value<UdpSession *>() == socket )
+						if( !ui.checkBox_recv_hide->isChecked() )
 						{
-							if( !ui.checkBox_recv_hide->isChecked() )
-							{
-								ui.textEdit_recv->append( ui.checkBox_recv_16->isChecked() ? data.toHex() : data );
-							}
+							ui.textEdit_recv->append( ui.checkBox_recv_16->isChecked() ? data.toHex() : data );
 						}
+					}
 
-						if( ui.checkBox_send_recv->isChecked() )
-						{
-							socket->write( data );
-						}
+					if( ui.checkBox_send_recv->isChecked() )
+					{
+						socket->write( data );
 					}
 				}
 			} );
